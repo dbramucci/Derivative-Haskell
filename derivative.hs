@@ -1,6 +1,8 @@
 {-# LANGUAGE NegativeLiterals #-}
 module Derive where
 
+import Utility (fixpoint)
+
 data Expr =
     Const Integer
   | X
@@ -36,7 +38,8 @@ dx (X :^ n) = Const n :* (X :^ (n - 1))
 dx (a :^ n) = dx (a :~> X :^ n)
 dx (g :~> f) = (g :~> dx f) :* dx g
 
-
+sdx :: Expr -> Expr
+sdx = fixpoint simplify . dx
 
 simplify :: Expr -> Expr
 -- Sum Rules
@@ -96,14 +99,3 @@ substitute arg body =
         a :^ n  -> substitute arg a :^ n
         -- Don't substitute into f because X in f refers to g
         g :~> f  -> substitute arg g :~> f
-
-
-sdx :: Expr -> Expr
-sdx = tillCycle simplify . dx
-
-tillCycle :: Eq a => (a -> a) -> a -> a
-tillCycle trans start = go start
-    where go current
-            | next == current = next
-            | otherwise       = go next
-            where next = trans current
