@@ -39,30 +39,49 @@ dx (g :~> f) = (g :~> dx f) :* dx g
 
 
 simplify :: Expr -> Expr
+-- Sum Rules
+simplify (a :+ Const 0) = a
+simplify (Const 0 :+ a) = a
 simplify (a :+ b) | simplify a == simplify b = Const 2 :* a
 simplify (Const n :* a :+ b) | simplify a == simplify b = Const (n+1) :* a
-simplify (Const 0 :- a)  = (Const -1) :* a
+
+-- Product rules
 simplify (_ :* Const 0) = Const 0
 simplify (Const 0 :* _) = Const 0
 simplify (a :* Const 1) = a
 simplify (Const 1 :* a) = a
+
+-- Difference rules
 simplify (a :- Const 0) = a
+simplify (Const 0 :- a)  = (Const -1) :* a
+
+-- Quotient Rules
 simplify (a :/ Const 1) = a
-simplify (a :+ Const 0) = a
-simplify (Const 0 :+ a) = a
+
+-- Power Rules
+simplify (_ :^ 0) = Const 1
+simplify (a :^ 1) = simplify a
+
+
+-- Constant arithmatic
 simplify (Const a :+ Const b) = Const (a + b)
 simplify (Const a :* Const b) = Const (a * b)
+simplify (Const a :- Const b) = Const (a - b)
+--simplify (Const a :/ Const b) = Const (a / b) -- Doesn't work with integers
+simplify (Const a :^ n) = Const (a ^ n)
+
+-- Function Rules
+simplify (_ :~> Const c) = Const c
+simplify (X :~> f) = simplify f
+
+-- Basic rules
 simplify (Const c) = Const c
 simplify X = X
 simplify (a :+ b) = simplify a :+ simplify b
 simplify (a :- b) = simplify a :- simplify b
 simplify (a :* b) = simplify a :* simplify b
 simplify (a :/ b) = simplify a :/ simplify b
-simplify (_ :^ 0) = Const 1
-simplify (a :^ 1) = simplify a
 simplify (a :^ n) = simplify a :^ n
-simplify (_ :~> Const c) = Const c
-simplify (X :~> f) = simplify f
 simplify (f :~> g) = simplify f :~> simplify g
 
 
