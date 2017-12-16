@@ -82,7 +82,20 @@ simplify (a :- b) = simplify a :- simplify b
 simplify (a :* b) = simplify a :* simplify b
 simplify (a :/ b) = simplify a :/ simplify b
 simplify (a :^ n) = simplify a :^ n
-simplify (f :~> g) = simplify f :~> simplify g
+simplify (g :~> f) = substitute (simplify g) (simplify f)
+
+substitute :: Expr -> Expr -> Expr
+substitute arg body =
+    case body of
+        Const c -> Const c
+        X       -> arg
+        a :+ b  -> substitute arg a :+ substitute arg b
+        a :* b  -> substitute arg a :* substitute arg b
+        a :- b  -> substitute arg a :- substitute arg b
+        a :/ b  -> substitute arg a :/ substitute arg b
+        a :^ n  -> substitute arg a :^ n
+        -- Don't substitute into f because X in f refers to g
+        g :~> f  -> substitute arg g :~> f
 
 
 sdx :: Expr -> Expr
