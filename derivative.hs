@@ -14,12 +14,7 @@ data Expr =
   | Expr :~> Expr -- f(g(x)) = g :~> f
     deriving (Show, Eq)
 
---f(x) = x^2
---X :~> x :* x
---f(x*x) :~> X :* X
---(X :* X) :* (X :* X)
-
-
+-- Define Function associativity and precedence.
 infixl 6 :+
 infixl 6 :-
 infixl 7 :*
