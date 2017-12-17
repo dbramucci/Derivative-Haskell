@@ -2,6 +2,7 @@
 module Derive where
 
 import Utility (fixpoint)
+import Debug.Trace
 
 data Expr =
     Const Integer
@@ -12,6 +13,8 @@ data Expr =
   | Expr :/ Expr
   | Expr :^ Integer
   | Expr :~> Expr -- f(g(x)) = g :~> f
+  | Sin Expr
+  | Cos Expr
     deriving (Show, Eq)
 
 -- Define Function associativity and precedence.
@@ -32,6 +35,11 @@ dx (a :/ b) =  (dx a :* b :- a :* dx b) :/ (b :* b) -- d/dx (a / b) = ((d/dx a)b
 dx (X :^ n) = Const n :* (X :^ (n - 1))
 dx (a :^ n) = dx (a :~> X :^ n)
 dx (g :~> f) = (g :~> dx f) :* dx g
+dx (Sin X) = Cos X
+dx (Cos X) = Const -1 :* Sin X
+dx (Sin a) = dx (a :~> Sin X)
+dx (Cos a) = dx (a :~> Cos X)
+
 
 sdx :: Expr -> Expr
 sdx = fixpoint simplify . dx
@@ -81,6 +89,8 @@ simplify (a :* b) = simplify a :* simplify b
 simplify (a :/ b) = simplify a :/ simplify b
 simplify (a :^ n) = simplify a :^ n
 simplify (g :~> f) = substitute (simplify g) (simplify f)
+simplify (Sin a) = Sin (simplify a)
+simplify (Cos a) = Cos (simplify a)
 
 substitute :: Expr -> Expr -> Expr
 substitute arg body =
@@ -94,3 +104,5 @@ substitute arg body =
         a :^ n  -> substitute arg a :^ n
         -- Don't substitute into f because X in f refers to g
         g :~> f  -> substitute arg g :~> f
+        Sin a -> Sin (substitute arg a)
+        Cos a -> Cos (substitute arg a)
