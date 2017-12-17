@@ -15,6 +15,7 @@ data Expr =
   | Expr :~> Expr -- f(g(x)) = g :~> f
   | Sin Expr
   | Cos Expr
+  | Tan Expr
     deriving (Show, Eq)
 
 -- Define Function associativity and precedence.
@@ -39,6 +40,7 @@ dx (Sin X) = Cos X
 dx (Cos X) = Const -1 :* Sin X
 dx (Sin a) = dx (a :~> Sin X)
 dx (Cos a) = dx (a :~> Cos X)
+dx (Tan a) = dx (Sin a :/ Cos a)
 
 
 sdx :: Expr -> Expr
@@ -91,6 +93,7 @@ simplify (a :^ n) = simplify a :^ n
 simplify (g :~> f) = substitute (simplify g) (simplify f)
 simplify (Sin a) = Sin (simplify a)
 simplify (Cos a) = Cos (simplify a)
+simplify (Tan a) = Tan (simplify a)
 
 substitute :: Expr -> Expr -> Expr
 substitute arg body =
@@ -106,3 +109,4 @@ substitute arg body =
         g :~> f  -> substitute arg g :~> f
         Sin a -> Sin (substitute arg a)
         Cos a -> Cos (substitute arg a)
+        Tan a -> Tan (substitute arg a)
