@@ -106,6 +106,9 @@ simplify (_ :* Const 0) = Const 0
 simplify (Const 0 :* _) = Const 0
 simplify (a :* Const 1) = a
 simplify (Const 1 :* a) = a
+simplify (a :* b) | simplify a == simplify b = a :^ 2
+simplify (a :^ n :* b) | simplify a == simplify b = a :^ (n + 1)
+simplify (a :* b :^ n) | simplify a == simplify b = a :^ (n + 1)
 
 -- Difference rules
 simplify (a :- Const 0) = a
@@ -121,7 +124,9 @@ simplify (a :^ 1) = simplify a
 
 -- Constant arithmatic
 simplify (Const a :+ Const b) = Const (a + b)
+simplify (Const a :+ (Const b :+ c)) = Const (a + b) :+ simplify c
 simplify (Const a :* Const b) = Const (a * b)
+simplify (Const a :* (Const b :* c)) = Const (a * b) :+ simplify c
 simplify (Const a :- Const b) = Const (a - b)
 --simplify (Const a :/ Const b) = Const (a / b) -- Doesn't work with integers
 simplify (Const a :^ n) = Const (a ^ n)
@@ -129,6 +134,15 @@ simplify (Const a :^ n) = Const (a ^ n)
 -- Function Rules
 simplify (_ :~> Const c) = Const c
 simplify (X :~> f) = simplify f
+
+-- Commutivity and Associativity rules
+simplify (a :+ Const c) = Const c :+ simplify a
+simplify (a :* Const c) = Const c :* simplify a
+simplify (a :+ (Const c :+ b)) = Const c :+ (simplify a :+ simplify b)
+simplify (a :* (Const c :* b)) = Const c :* (simplify a :* simplify b)
+simplify ((a :+ b) :+ c) = simplify a :+ (simplify b :+ simplify c)
+simplify ((a :* b) :* c) = simplify a :* (simplify b :* simplify c)
+
 
 -- Basic rules
 simplify (Const c) = Const c
